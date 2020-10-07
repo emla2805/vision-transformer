@@ -1,4 +1,4 @@
-# Vision Transformer ViT
+# Vision Transformer (ViT)
 
 Tensorflow implementation of the Vision Transformer (ViT) presented in 
 [An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://openreview.net/pdf?id=YicbFdNTTy),
