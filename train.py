@@ -32,30 +32,31 @@ if __name__ == "__main__":
     )
     ds_test = ds["test"].batch(32)
 
-    model = VisionTransformer(
-        image_size=args.image_size,
-        patch_size=args.patch_size,
-        num_layers=args.num_layers,
-        num_classes=10,
-        d_model=args.d_model,
-        num_heads=args.num_heads,
-        mlp_dim=args.mlp_dim,
-        channels=3,
-        dropout=0.1,
-    )
-    loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    optimizer = tf.keras.optimizers.Adam(learning_rate=args.lr)
-    model.compile(
-        optimizer=optimizer,
-        loss=loss,
-        metrics=["accuracy"]
-    )
+    strategy = tf.distribute.MirroredStrategy()
+
+    with strategy.scope():
+        model = VisionTransformer(
+            image_size=args.image_size,
+            patch_size=args.patch_size,
+            num_layers=args.num_layers,
+            num_classes=10,
+            d_model=args.d_model,
+            num_heads=args.num_heads,
+            mlp_dim=args.mlp_dim,
+            channels=3,
+            dropout=0.1,
+        )
+        model.compile(
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(
+                from_logits=True
+            ),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=args.lr),
+            metrics=["accuracy"],
+        )
 
     model.fit(
         ds_train,
         validation_data=ds_test,
         epochs=args.epochs,
-        callbacks=[
-            TensorBoard(log_dir=args.logdir, profile_batch=0),
-        ],
+        callbacks=[TensorBoard(log_dir=args.logdir, profile_batch=0),],
     )
