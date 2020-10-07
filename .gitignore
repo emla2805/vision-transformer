@@ -1,0 +1,5 @@
+.env
+.idea
+logs/
+__pycache__/
+.python-version
