@@ -30,7 +30,12 @@ if __name__ == "__main__":
         .batch(args.batch_size)
         .prefetch(AUTOTUNE)
     )
-    ds_test = ds["test"].batch(32)
+    ds_test = (
+        ds["test"]
+        .cache()
+        .batch(args.batch_size)
+        .prefetch(AUTOTUNE)
+    )
 
     strategy = tf.distribute.MirroredStrategy()
 
