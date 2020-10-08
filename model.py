@@ -5,6 +5,7 @@ from tensorflow.keras.layers import (
     Dropout,
     LayerNormalization,
 )
+from tensorflow.keras.layers.experimental.preprocessing import Rescaling
 
 
 class MultiHeadSelfAttention(tf.keras.layers.Layer):
@@ -96,6 +97,7 @@ class VisionTransformer(tf.keras.Model):
         self.d_model = d_model
         self.num_layers = num_layers
 
+        self.rescale = Rescaling(1./255)
         self.pos_emb = self.add_weight(
             "pos_emb", shape=(1, num_patches + 1, d_model)
         )
@@ -126,6 +128,7 @@ class VisionTransformer(tf.keras.Model):
 
     def call(self, x, training):
         batch_size = tf.shape(x)[0]
+        x = self.rescale(x)
         patches = self.extract_patches(x)
         x = self.patch_proj(patches)
 
