@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
 import tensorflow as tf
+import tensorflow_addons as tfa
 import tensorflow_datasets as tfds
 from tensorflow.keras.callbacks import TensorBoard
 
@@ -18,6 +19,7 @@ if __name__ == "__main__":
     parser.add_argument("--num-heads", default=4, type=int)
     parser.add_argument("--mlp-dim", default=128, type=int)
     parser.add_argument("--lr", default=3e-4, type=float)
+    parser.add_argument("--weight-decay", default=1e-4, type=float)
     parser.add_argument("--batch-size", default=64, type=int)
     parser.add_argument("--epochs", default=50, type=int)
     args = parser.parse_args()
@@ -55,7 +57,9 @@ if __name__ == "__main__":
             loss=tf.keras.losses.SparseCategoricalCrossentropy(
                 from_logits=True
             ),
-            optimizer=tf.keras.optimizers.Adam(learning_rate=args.lr),
+            optimizer=tfa.optimizers.AdamW(
+                learning_rate=args.lr, weight_decay=args.weight_decay
+            ),
             metrics=["accuracy"],
         )
 
