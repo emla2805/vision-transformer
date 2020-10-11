@@ -110,6 +110,7 @@ class VisionTransformer(tf.keras.Model):
         self.mlp_head = tf.keras.Sequential(
             [
                 Dense(mlp_dim, activation=tfa.activations.gelu),
+                Dropout(dropout),
                 Dense(num_classes),
             ]
         )
