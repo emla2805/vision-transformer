@@ -1,3 +1,4 @@
+import os
 from argparse import ArgumentParser
 
 import tensorflow as tf
@@ -69,3 +70,4 @@ if __name__ == "__main__":
         epochs=args.epochs,
         callbacks=[TensorBoard(log_dir=args.logdir, profile_batch=0),],
     )
+    model.save_weights(os.path.join(args.logdir, "vit"))
