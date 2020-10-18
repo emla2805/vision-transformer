@@ -21,20 +21,20 @@ if __name__ == "__main__":
     parser.add_argument("--mlp-dim", default=128, type=int)
     parser.add_argument("--lr", default=3e-4, type=float)
     parser.add_argument("--weight-decay", default=1e-4, type=float)
-    parser.add_argument("--batch-size", default=64, type=int)
-    parser.add_argument("--epochs", default=50, type=int)
+    parser.add_argument("--batch-size", default=4096, type=int)
+    parser.add_argument("--epochs", default=300, type=int)
     args = parser.parse_args()
 
-    ds = tfds.load("cifar10", as_supervised=True)
+    ds = tfds.load("imagenet_resized/32x32", as_supervised=True)
     ds_train = (
         ds["train"]
         .cache()
-        .shuffle(1024)
+        .shuffle(5 * args.batch_size)
         .batch(args.batch_size)
         .prefetch(AUTOTUNE)
     )
     ds_test = (
-        ds["test"]
+        ds["validation"]
         .cache()
         .batch(args.batch_size)
         .prefetch(AUTOTUNE)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
             image_size=args.image_size,
             patch_size=args.patch_size,
             num_layers=args.num_layers,
-            num_classes=10,
+            num_classes=1000,
             d_model=args.d_model,
             num_heads=args.num_heads,
             mlp_dim=args.mlp_dim,
