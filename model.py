@@ -56,11 +56,16 @@ class MultiHeadSelfAttention(tf.keras.layers.Layer):
 
 
 class TransformerBlock(tf.keras.layers.Layer):
-    def __init__(self, embed_dim, num_heads, ff_dim, dropout=0.1):
+    def __init__(self, embed_dim, num_heads, mlp_dim, dropout=0.1):
         super(TransformerBlock, self).__init__()
         self.att = MultiHeadSelfAttention(embed_dim, num_heads)
-        self.ffn = tf.keras.Sequential(
-            [Dense(ff_dim, activation="relu"), Dense(embed_dim),]
+        self.mlp = tf.keras.Sequential(
+            [
+                Dense(mlp_dim, activation=tfa.activations.gelu),
+                Dropout(dropout),
+                Dense(embed_dim),
+                Dropout(dropout),
+            ]
         )
         self.layernorm1 = LayerNormalization(epsilon=1e-6)
         self.layernorm2 = LayerNormalization(epsilon=1e-6)
@@ -68,12 +73,15 @@ class TransformerBlock(tf.keras.layers.Layer):
         self.dropout2 = Dropout(dropout)
 
     def call(self, inputs, training):
-        attn_output = self.att(inputs)
+        inputs_norm = self.layernorm1(inputs)
+        attn_output = self.att(inputs_norm)
         attn_output = self.dropout1(attn_output, training=training)
-        out1 = self.layernorm1(inputs + attn_output)
-        ffn_output = self.ffn(out1)
-        ffn_output = self.dropout2(ffn_output, training=training)
-        return self.layernorm2(out1 + ffn_output)
+        out1 = attn_output + inputs
+
+        out1_norm = self.layernorm2(out1)
+        mlp_output = self.mlp(out1_norm)
+        mlp_output = self.dropout2(mlp_output, training=training)
+        return mlp_output + out1
 
 
 class VisionTransformer(tf.keras.Model):
@@ -97,7 +105,7 @@ class VisionTransformer(tf.keras.Model):
         self.d_model = d_model
         self.num_layers = num_layers
 
-        self.rescale = Rescaling(1./255)
+        self.rescale = Rescaling(1.0 / 255)
         self.pos_emb = self.add_weight(
             "pos_emb", shape=(1, num_patches + 1, d_model)
         )
@@ -109,6 +117,7 @@ class VisionTransformer(tf.keras.Model):
         ]
         self.mlp_head = tf.keras.Sequential(
             [
+                LayerNormalization(epsilon=1e-6),
                 Dense(mlp_dim, activation=tfa.activations.gelu),
                 Dropout(dropout),
                 Dense(num_classes),
